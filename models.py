@@ -20,7 +20,7 @@ class User:
     def get_email(self):
         return self.email
 
-    def get_password_hash(self):
+    def get_password(self):
         return self.password_hash
 
     def __str__(self):
