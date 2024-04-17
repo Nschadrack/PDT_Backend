@@ -14,6 +14,7 @@ app = Flask(__name__)
 
 @app.route("/account/login/", methods=["POST"])
 def login():
+    print("Request data: ", request.json)
     email = request.json.get("email", None)
     password = request.json.get("password", None)
     
@@ -36,7 +37,7 @@ def login():
 
 @app.route("/account/logout/", methods=["GET"])
 def logout():
-    email = request.args.get("email", None)
+    email = request.args("email", None)
     session = create_or_update_user_session(email, 0)
     if session[1]:
         return jsonify({"message": "Logged out successfully!"}), 200
