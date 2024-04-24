@@ -3,23 +3,32 @@ from models import User
 
 
 def create_user(user):
-    try:
-        conn = sqlite3.connect("pdt.db")
+    result = get_user_by_email(user.get_email())
+    conn = None
+    if not result[1]:
+        try:
+            conn = sqlite3.connect("pdt.db")
 
-        query = """INSERT INTO users(name, email, password) 
-                                VALUES(?, ?, ?)"""
-        
-        cursor = conn.cursor()
-        cursor.execute(query, (user.get_name(),
-                            user.get_email(),
-                            user.get_password()))
-        conn.commit()
-        return "Account  created successfully!", True
-    except Exception as e:
-        return f"Error: {str(e)}", False
+            query = """INSERT INTO users(name, email, password) 
+                                    VALUES(?, ?, ?)"""
+
+            cursor = conn.cursor()
+            cursor.execute(query, (user.get_name(),
+                                   user.get_email(),
+                                   user.get_password()))
+            conn.commit()
+            return "Account  created successfully!", True
+        except Exception as e:
+            return f"Error: {str(e)}", False
+        finally:
+            if conn:
+                conn.close()
+    else:
+        return f"User with email: {user.get_email()} already exists.", False
 
 
 def get_user_by_email(email):
+    conn = None
     try:
         conn = sqlite3.connect("pdt.db")
         query = "SELECT * FROM users WHERE email=?"
@@ -34,9 +43,29 @@ def get_user_by_email(email):
             return None, False
     except Exception as e:
         return f"Error: {str(e)}", False
+    finally:
+        if conn:
+            conn.close()
+
+
+def delete_user(email):
+    conn = None
+    try:
+        conn = sqlite3.connect("pdt.db")
+        query = "DELETE FROM users WHERE email=?"
+        cursor = conn.cursor()
+        cursor.execute(query, (email,))
+        conn.commit()
+        return "deleted successfully", True
+    except Exception as e:
+        return f"Error: {str(e)}", False
+    finally:
+        if conn:
+            conn.close()
 
 
 def get_users():
+    conn = None
     try:
         conn = sqlite3.connect("pdt.db")
         query = "SELECT * FROM users"
@@ -46,13 +75,17 @@ def get_users():
         users = []
         for row in rows:
             users.append(User(name=row[1],
-                        email=row[2], password=row[3]))
+                              email=row[2], password=row[3]))
         return users, True
     except Exception as e:
         return f"Error: {str(e)}", False
-    
+    finally:
+        if conn:
+            conn.close()
+
 
 def get_user_session_by_email(email):
+    conn = None
     try:
         conn = sqlite3.connect("pdt.db")
         query = "SELECT * FROM sessions WHERE email=?"
@@ -66,10 +99,14 @@ def get_user_session_by_email(email):
             return None, False
     except Exception as e:
         return f"Error: {str(e)}", False
-    
+    finally:
+        if conn:
+            conn.close()
+
 
 def create_or_update_user_session(email, login_logout):
     result = get_user_session_by_email(email)
+    conn = None
     try:
         conn = sqlite3.connect("pdt.db")
         values = (login_logout, email)
@@ -86,7 +123,10 @@ def create_or_update_user_session(email, login_logout):
         return "Success", True
     except Exception as e:
         return f"Error: {str(e)}", False
-    
+    finally:
+        if conn:
+            conn.close()
+
 
 if __name__ == "__main__":
     result = get_users()
